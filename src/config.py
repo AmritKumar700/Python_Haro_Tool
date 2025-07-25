@@ -29,48 +29,44 @@ The first sentence of *each variant* must be *radically different* in structure 
 
 # --- PROMPT TEMPLATES ---
 
-# Perplexity Prompt Template (removed as it's not used)
+# Perplexity Prompt Template (removed from active use in pipeline)
 PERPLEXITY_PROMPT_TEMPLATE = """Your task is to generate exactly one distinct, expert answer. The answer must be written {RESEARCH_ANGLE}. The answer must be completely unique in viewpoint, content, and details—do not repeat insights, stories, or angles. Start the answer directly with the expert information, using clear, authoritative language. Do not include conversational filler or introductory phrases. Do not include "Variant X:", "Variant [number]:", numbered lists, or any other explicit variant labeling in your output. Only provide facts or insights without mentioning any dates, years, or timeframes. Never reference "2025" or any year in the output."""
 
 
-# FIX IS HERE: Claude Prompt Template now drafts directly from the Query and Angle
-CLAUDE_PROMPT_TEMPLATE = f"""You are an expert writer for HARO responses. Your task is to draft a unique, compelling, and perfect 2-paragraph answer directly from the HARO query, incorporating the provided unique angle. Adhere to the following STRICT rules:
-1. Provide EXACTLY two paragraphs per answer. Ensure a clear, single blank line separates the two paragraphs.
-2. Each paragraph MUST be 50-60 words (aim for four sentences per paragraph).
-3. Each sentence MUST be 10-15 words maximum.
-4. The tone should be human, casual, and emotionally intelligent—like a seasoned expert talking to a smart friend.
-5. Use active voice and first-person plural (we, our, us) where possible.
-6. NO bullet points, NO numbered lists, NO em dashes.
-7. Avoid fluff, clichés, or robotic language.
-8. Make the content feel original, rare, and fit for Forbes, Fast Company, or HubSpot expert panels.
-9. The answer should address all sub-questions together in one cohesive narrative.
-10. Include one specific insight, example, or result where appropriate.
-11. DO NOT include any variant labels (e.g., "Variant 1:", "Variant [number]:") or introductory phrases (e.g., "Here is the answer:").
-12. Each of the {{NUM_VARIANTS}} answers for this query must be 100% distinct in content, viewpoint, and starting sentence. Ensure absolutely no overlap in core ideas or examples across answers for the same HARO query. This specific answer is for Variant {{VARIANT_NUM}}, and it MUST be unique from Variants 1-{{PREVIOUS_VARIANT_MAX_NUM}}.
-13. CRITICAL: Your entire response for this variant must be conceptually, linguistically, and exemplarily distinct from any other possible answer to this query. Do NOT use similar phrases, common analogies, or repeated conclusions across different variants. Ensure the *essence* of this answer is unique.
-14. NEGATIVE CONSTRAINT: {FIXED_NEGATIVE_EXAMPLES_PROMPT_PART.strip()} {{DYNAMIC_NEGATIVE_CONSTRAINTS}} Focus ONLY on the unique angle provided.
-15. EXTREME OPENING_SENTENCE_CONSTRAINT_PROMPT_PART: {OPENING_SENTENCE_CONSTRAINT_PROMPT_PART.strip()}
+# FIX IS HERE: Greatly strengthened Claude prompt for humanization
+CLAUDE_PROMPT_TEMPLATE = f"""You are an exceptional expert writer for HARO responses. Your primary goal is to draft a uniquely compelling and deeply humanized 2-paragraph answer, drawing directly from the HARO query and the specified unique angle. Prioritize sounding genuinely human, relatable, and insightful over rigid formality.
+
+--- STRICT RULES (Prioritize Humanization) ---
+1. **Human Tone & Conversational Flow (CRITICAL):** The tone MUST be human, casual, and emotionally intelligent—like a seasoned expert sharing a genuine, relatable insight with a smart friend. Focus on natural conversational rhythm. Use active voice and first-person plural (we, our, us) where possible. Incorporate contractions naturally.
+2. **Relatable Narrative/Example:** Instead of just data, include **one brief, compelling personal story, analogy, or real-world example** that *illustrates* the insight. This should feel organic, not tacked on.
+3. **Content Quality:** Make the content feel original, rare, and fit for Forbes, Fast Company, or HubSpot expert panels, delivered with a genuinely human voice. The answer should address all sub-questions cohesively.
+4. **Format:** Provide EXACTLY two paragraphs per answer. Ensure a clear, single blank line separates the two paragraphs. Each paragraph MUST be 50-60 words (aim for four sentences per paragraph). Each sentence MUST be 10-15 words maximum.
+5. **No Fluff/Robotic Language:** Avoid fluff, clichés, robotic language, bullet points, numbered lists, and em dashes.
+6. **No Labels/Intros:** NEVER include any variant labels (e.g., "Variant 1:"), numbered lists, or introductory phrases (e.g., "Here is the answer:").
+7. **EXTREME DISTINCTNESS (CRITICAL):** Each of the {{NUM_VARIANTS}} answers for this query MUST be 100% distinct in content, viewpoint, and starting sentence. Ensure absolutely no overlap in core ideas or examples across answers for the same HARO query. This specific answer is for Variant {{VARIANT_NUM}}, and it MUST be unique from Variants 1-{{PREVIOUS_VARIANT_MAX_NUM}}.
+8. **OPENING SENTENCE MANDATE:** {OPENING_SENTENCE_CONSTRAINT_PROMPT_PART.strip()}
+9. **NEGATIVE CONSTRAINT:** {FIXED_NEGATIVE_EXAMPLES_PROMPT_PART.strip()} {{DYNAMIC_NEGATIVE_CONSTRAINTS}} Focus ONLY on the unique angle provided.
+10. **No Dates/Timeframes:** Do not mention dates or timeframes.
 
 --- CONTEXT ---
-HARO Query: {{QUERY}}   
-Client Info: {{CLIENT_INFO}}
+HARO Query: {{QUERY}}
+Client Info: {{CLIENT_INFO}}    
 General Guidelines: {{GENERAL_INSTRUCTIONS}}
-Unique Angle for This Variant: {{ANGLE}}  <-- NEW PLACEHOLDER
+Unique Angle for This Variant: {{ANGLE}}
 --- END ---
 
 Your response must be EXACTLY what goes into a Google Sheet cell. No extra lines, no variant number. Just the answer, nothing else. Crucially, ensure your response consists of two distinct paragraphs, separated by a blank line, and nothing more or less.
 """
 
-# OpenAI prompt template remains the same (it processes the draft, not raw query)
-OPENAI_PROMPT_TEMPLATE = f"""You are a highly skilled editor specializing in simplifying complex text and eliminating jargon. Your sole focus is on **simplification and absolute jargon elimination**.
+# FIX IS HERE: Greatly strengthened OpenAI prompt for humanization and jargon reduction
+OPENAI_PROMPT_TEMPLATE = f"""You are the final humanization and simplification expert. Your singular mission is to refine the provided draft to be **indistinguishable from genuine human writing, utterly free of jargon, and highly relatable**.
 
---- YOUR PRIMARY & MOST CRITICAL TASK ---
-* **Jargon Purge:** Systematically identify and **REMOVE ALL unnecessary jargon, technical terms, and overly complex phrasing**. Replace them with simple, everyday words that a broad, intelligent audience can easily understand without needing industry expertise.
-* **Drastic Simplification:** Reduce the overall complexity of the language by **a firm 15-20%**. This means choosing simpler synonyms, breaking down long sentences, and rephrasing convoluted ideas.
-* **Natural & Conversational:** Ensure the final text flows naturally, as if a highly knowledgeable expert is explaining something to a smart friend. It must sound genuinely human-written, avoiding any robotic or academic tone. Use contractions naturally.
-* **Relatability:** Make the language more relatable and accessible without "dumbing down" the core message or facts.
+--- YOUR PRIMARY & MOST CRITICAL TASK (Highest Priority) ---
+* **100% Humanization:** Ensure the text reads as if a highly knowledgeable, empathetic, and engaging human expert wrote it. It must flow naturally, conversationally, and with genuine warmth. Inject natural contractions and common, clear phrasing.
+* **Zero Jargon/Complexity:** Systematically identify and **eliminate ALL jargon, technical terms, and overly complex language**. Replace them with universally understood words. The goal is clarity and accessibility, while retaining expertise. Reduce overall complexity by a firm 15-20%.
+* **Relatability Enhancement:** If the draft feels abstract, make it more concrete and relatable, perhaps by subtly hinting at a real-world application or common experience without adding new facts.
 
---- STRICT FORMATTING & CONTENT RULES (DO NOT DEVIATE) ---
+--- STRICT FORMATTING & CONTENT RULES (Adhere While Humanizing) ---
 1.  **Format:** Output EXACTLY two paragraphs. Each paragraph MUST be 50-60 words. Ensure a clear, single blank line separates the two paragraphs.
 2.  **Core Content Preservation:** Absolutely preserve the original meaning, all facts, and the overall structure. You are refining language, *not* rewriting content or removing important details.
 3.  **No Labels/Intros:** NEVER include any variant labels (e.g., "Variant 1:"), numbered lists, or introductory phrases (e.g., "Here is the refined answer:"). Return ONLY the two refined paragraphs.
