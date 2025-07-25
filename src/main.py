@@ -26,7 +26,7 @@ import json
 
 logger = get_logger(__name__)
 
-# --- Helper Functions for Output Generation and Download ---
+# --- Helper Functions for Output Generation and Download (unchanged) ---
 
 def generate_text_output(all_results_with_variants):
     output_str = ""
@@ -165,8 +165,21 @@ async def run_processing(queries, client_info_map, parameters, status_placeholde
 def main():
     st.set_page_config(page_title="HARO Automation Tool", layout="wide")
 
+    # --- Initialize ALL session state variables at the very top ---
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
+    if 'results' not in st.session_state:
+        st.session_state.results = []
+    if 'show_debug_outputs' not in st.session_state:
+        st.session_state.show_debug_outputs = False
+    if 'client_info_parsed' not in st.session_state:
+        st.session_state.client_info_parsed = {}
+    if 'general_instructions' not in st.session_state:
+        st.session_state.general_instructions = "Ensure answers are concise, impactful, and demonstrate deep industry knowledge."
+
     DWS_LOGO_URL = "https://media.glassdoor.com/sqll/868966/digital-web-solutions-squarelogo-1579870425403.png"
 
+    # Display the logo and title using columns for alignment
     logo_col, title_col = st.columns([0.1, 0.9])
     with logo_col:
         st.image(DWS_LOGO_URL, width=100)
@@ -174,9 +187,7 @@ def main():
         st.title("HARO Response Automation Tool (Multi-Variant)")
 
     # --- AUTHENTICATION SECTION ---
-    if 'authenticated' not in st.session_state:
-        st.session_state.authenticated = False
-
+    # If not authenticated, show the login form
     if not st.session_state.authenticated:
         st.subheader("Login to Access HARO Tool")
         
@@ -197,20 +208,22 @@ def main():
                 if username in app_credentials and app_credentials[username] == password:
                     st.session_state.authenticated = True
                     st.success("Login successful!")
-                    st.rerun() # <-- FIX IS HERE: Changed from st.experimental_rerun()
+                    st.rerun() # Changed from st.experimental_rerun()
                 else:
                     st.error("Invalid username or password.")
+        
+        # IMPORTANT: Stop execution here if not authenticated, so the rest of the app doesn't render
         return 
 
-    # --- LOGOUT BUTTON ---
+    # --- LOGOUT BUTTON (Only shown if authenticated) ---
     logout_col, _ = st.columns([0.1, 0.9])
     with logout_col:
         if st.button("Logout"):
             st.session_state.authenticated = False
             st.info("Logged out successfully.")
-            st.rerun() # <-- FIX IS HERE: Changed from st.experimental_rerun()
+            st.rerun() # Changed from st.experimental_rerun()
 
-    # --- REST OF THE MAIN APP CONTENT ---
+    # --- REST OF THE MAIN APP CONTENT (Only displayed if authenticated) ---
     st.markdown("Enter up to 4 HARO queries and their respective client information. The tool will generate **5 distinct variants** for each query.")
 
     all_queries_inputs = []
