@@ -22,10 +22,12 @@ from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.section import WD_SECTION_START
 
+# Import json for handling credentials from st.secrets
+import json # <-- ADD THIS IMPORT
+
 logger = get_logger(__name__)
 
-# --- Helper Functions for Output Generation and Download ---
-# (These remain the same)
+# --- Helper Functions for Output Generation and Download (unchanged) ---
 
 def generate_text_output(all_results_with_variants):
     output_str = ""
@@ -121,7 +123,7 @@ def generate_docx_output(all_results_with_variants):
     document.save(bio)
     return bio.getvalue()
 
-# --- Asynchronous Processing Function ---
+# --- Asynchronous Processing Function (unchanged) ---
 
 async def run_processing(queries, client_info_map, parameters, status_placeholder):
     ai_service = AIService()
@@ -159,33 +161,64 @@ async def run_processing(queries, client_info_map, parameters, status_placeholde
     await ai_service.close()
     return all_query_results
 
-# --- Main Streamlit Application ---
+# --- Main Streamlit Application (Updated for Login) ---
 
 def main():
     st.set_page_config(page_title="HARO Automation Tool", layout="wide")
 
-    # Define the logo URL (Now with the correct direct image URL)
     DWS_LOGO_URL = "https://media.glassdoor.com/sqll/868966/digital-web-solutions-squarelogo-1579870425403.png"
 
     # Display the logo and title using columns for alignment
-    logo_col, title_col = st.columns([0.1, 0.9]) # Adjust column ratios as needed
-
+    logo_col, title_col = st.columns([0.1, 0.9])
     with logo_col:
-        st.image(DWS_LOGO_URL, width=100) # Adjust width as desired (e.g., 80, 120)
-
+        st.image(DWS_LOGO_URL, width=100)
     with title_col:
         st.title("HARO Response Automation Tool (Multi-Variant)")
 
+    # --- AUTHENTICATION SECTION ---
+    # Initialize authentication state in session
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
 
-    if 'results' not in st.session_state:
-        st.session_state.results = []
-    if 'show_debug_outputs' not in st.session_state:
-        st.session_state.show_debug_outputs = False
-    if 'client_info_parsed' not in st.session_state:
-        st.session_state.client_info_parsed = {}
-    if 'general_instructions' not in st.session_state:
-        st.session_state.general_instructions = "Ensure answers are concise, impactful, and demonstrate deep industry knowledge."
+    # If not authenticated, show the login form
+    if not st.session_state.authenticated:
+        st.subheader("Login to Access HARO Tool")
+        
+        # Retrieve credentials from st.secrets.
+        # Expecting st.secrets["APP_CREDENTIALS"] to be a JSON string like '{"user1": "pass1", "amrit": "your_password"}'
+        app_credentials_json_str = st.secrets.get("APP_CREDENTIALS", "{}")
+        
+        try:
+            app_credentials = json.loads(app_credentials_json_str)
+        except json.JSONDecodeError:
+            st.error("Error loading application credentials. Please ensure 'APP_CREDENTIALS' in st.secrets is valid JSON.")
+            app_credentials = {} # Fallback to empty dict
 
+        username = st.text_input("Username:")
+        password = st.text_input("Password:", type="password") # type="password" hides input
+
+        login_button_col, _ = st.columns([0.3, 0.7]) # To make button smaller
+        with login_button_col:
+            if st.button("Login", type="primary"):
+                if username in app_credentials and app_credentials[username] == password:
+                    st.session_state.authenticated = True
+                    st.success("Login successful!")
+                    st.experimental_rerun() # Rerun the app to hide login and show content
+                else:
+                    st.error("Invalid username or password.")
+        
+        # IMPORTANT: Stop execution here if not authenticated, so the rest of the app doesn't render
+        return 
+
+    # --- LOGOUT BUTTON (Only shown if authenticated) ---
+    logout_col, _ = st.columns([0.1, 0.9])
+    with logout_col:
+        if st.button("Logout"):
+            st.session_state.authenticated = False
+            st.info("Logged out successfully.")
+            st.experimental_rerun() # Rerun to show login form again
+
+    # --- REST OF THE MAIN APP CONTENT (Only displayed if authenticated) ---
     st.markdown("Enter up to 4 HARO queries and their respective client information. The tool will generate **5 distinct variants** for each query.")
 
     all_queries_inputs = []
