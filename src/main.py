@@ -22,12 +22,11 @@ from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.section import WD_SECTION_START
 
-# Import json for handling credentials from st.secrets
-import json # <-- ADD THIS IMPORT
+import json
 
 logger = get_logger(__name__)
 
-# --- Helper Functions for Output Generation and Download (unchanged) ---
+# --- Helper Functions for Output Generation and Download ---
 
 def generate_text_output(all_results_with_variants):
     output_str = ""
@@ -168,7 +167,6 @@ def main():
 
     DWS_LOGO_URL = "https://media.glassdoor.com/sqll/868966/digital-web-solutions-squarelogo-1579870425403.png"
 
-    # Display the logo and title using columns for alignment
     logo_col, title_col = st.columns([0.1, 0.9])
     with logo_col:
         st.image(DWS_LOGO_URL, width=100)
@@ -176,49 +174,43 @@ def main():
         st.title("HARO Response Automation Tool (Multi-Variant)")
 
     # --- AUTHENTICATION SECTION ---
-    # Initialize authentication state in session
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
 
-    # If not authenticated, show the login form
     if not st.session_state.authenticated:
         st.subheader("Login to Access HARO Tool")
         
-        # Retrieve credentials from st.secrets.
-        # Expecting st.secrets["APP_CREDENTIALS"] to be a JSON string like '{"user1": "pass1", "amrit": "your_password"}'
         app_credentials_json_str = st.secrets.get("APP_CREDENTIALS", "{}")
         
         try:
             app_credentials = json.loads(app_credentials_json_str)
         except json.JSONDecodeError:
             st.error("Error loading application credentials. Please ensure 'APP_CREDENTIALS' in st.secrets is valid JSON.")
-            app_credentials = {} # Fallback to empty dict
+            app_credentials = {}
 
         username = st.text_input("Username:")
-        password = st.text_input("Password:", type="password") # type="password" hides input
+        password = st.text_input("Password:", type="password")
 
-        login_button_col, _ = st.columns([0.3, 0.7]) # To make button smaller
+        login_button_col, _ = st.columns([0.3, 0.7])
         with login_button_col:
             if st.button("Login", type="primary"):
                 if username in app_credentials and app_credentials[username] == password:
                     st.session_state.authenticated = True
                     st.success("Login successful!")
-                    st.experimental_rerun() # Rerun the app to hide login and show content
+                    st.rerun() # <-- FIX IS HERE: Changed from st.experimental_rerun()
                 else:
                     st.error("Invalid username or password.")
-        
-        # IMPORTANT: Stop execution here if not authenticated, so the rest of the app doesn't render
         return 
 
-    # --- LOGOUT BUTTON (Only shown if authenticated) ---
+    # --- LOGOUT BUTTON ---
     logout_col, _ = st.columns([0.1, 0.9])
     with logout_col:
         if st.button("Logout"):
             st.session_state.authenticated = False
             st.info("Logged out successfully.")
-            st.experimental_rerun() # Rerun to show login form again
+            st.rerun() # <-- FIX IS HERE: Changed from st.experimental_rerun()
 
-    # --- REST OF THE MAIN APP CONTENT (Only displayed if authenticated) ---
+    # --- REST OF THE MAIN APP CONTENT ---
     st.markdown("Enter up to 4 HARO queries and their respective client information. The tool will generate **5 distinct variants** for each query.")
 
     all_queries_inputs = []
