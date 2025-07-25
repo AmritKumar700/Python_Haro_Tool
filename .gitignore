@@ -1,0 +1,7 @@
+# .gitignore
+.env
+.streamlit/secrets.toml
+__pycache__/
+venv/
+*.log          # Example: ignore any .log files
+.DS_Store      # macOS specific, often automatically added by IDEs
