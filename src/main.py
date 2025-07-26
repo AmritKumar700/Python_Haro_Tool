@@ -184,7 +184,7 @@ def main():
     with logo_col:
         st.image(DWS_LOGO_URL, width=100)
     with title_col:
-        st.title("HARO Response Automation Tool (Multi-Variant)")
+        st.title("HARO Answer's Automation Tool (Multi-Variant)")
 
     # --- AUTHENTICATION SECTION ---
     # If not authenticated, show the login form
@@ -199,8 +199,11 @@ def main():
             st.error("Error loading application credentials. Please ensure 'APP_CREDENTIALS' in st.secrets is valid JSON.")
             app_credentials = {}
 
-        username = st.text_input("Username:")
-        password = st.text_input("Password:", type="password")
+        user_col, pass_col = st.columns([0.5, 0.5])
+        with user_col:
+            username = st.text_input("Username:")
+        with pass_col:
+            password = st.text_input("Password:", type="password")
 
         login_button_col, _ = st.columns([0.3, 0.7])
         with login_button_col:
