@@ -160,7 +160,7 @@ async def run_processing(queries, client_info_map, parameters, status_placeholde
     await ai_service.close()
     return all_query_results
 
-# --- Main Streamlit Application (Updated for Login) ---
+# --- Main Streamlit Application (Fixing Duplicate Logout Button) ---
 
 def main():
     st.set_page_config(page_title="HARO Automation Tool", layout="wide")
@@ -176,15 +176,6 @@ def main():
         st.session_state.client_info_parsed = {}
     if 'general_instructions' not in st.session_state:
         st.session_state.general_instructions = "Ensure answers are concise, impactful, and demonstrate deep industry knowledge."
-
-    # Place this after st.set_page_config and before the main content
-    if st.session_state.authenticated:
-        _, logout_col = st.columns([0.85, 0.15])
-        with logout_col:
-            if st.button("Logout"):
-                st.session_state.authenticated = False
-                st.info("Logged out successfully.")
-                st.rerun()    
 
     DWS_LOGO_URL = "https://media.glassdoor.com/sqll/868966/digital-web-solutions-squarelogo-1579870425403.png"
 
@@ -219,20 +210,24 @@ def main():
                 if username in app_credentials and app_credentials[username] == password:
                     st.session_state.authenticated = True
                     st.success("Login successful!")
-                    st.rerun() # Changed from st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("Invalid username or password.")
         
         # IMPORTANT: Stop execution here if not authenticated, so the rest of the app doesn't render
         return 
 
-    # --- LOGOUT BUTTON (Only shown if authenticated) ---
-    logout_col, _ = st.columns([0.1, 0.9])
-    with logout_col:
-        if st.button("Logout"):
-            st.session_state.authenticated = False
-            st.info("Logged out successfully.")
-            st.rerun() # Changed from st.experimental_rerun()
+    # --- LOGOUT BUTTON (Only show ONE instance of the Logout button) ---
+    # The current authenticated user will always see this button at the top right.
+    # The previous attempt to put it before the logo/title resulted in duplication.
+    # We'll place it here, after the login gate, but before the main content.
+    if st.session_state.authenticated: # Only render if authenticated
+        _, logout_col = st.columns([0.85, 0.15]) # Adjust column ratio for top-right placement
+        with logout_col:
+            if st.button("Logout", key="top_logout_button"): # Add a unique key for safety
+                st.session_state.authenticated = False
+                st.info("Logged out successfully.")
+                st.rerun()
 
     # --- REST OF THE MAIN APP CONTENT (Only displayed if authenticated) ---
     st.markdown("Enter up to 4 HARO queries and their respective client information. The tool will generate **5 distinct variants** for each query.")
