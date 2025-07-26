@@ -7,7 +7,7 @@ src_dir = os.path.join(project_root, "src")
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 if src_dir not in sys.path:
-    sys.sys.path.insert(0, src_dir)
+    sys.path.insert(0, src_dir)
 
 import streamlit as st
 import asyncio
@@ -59,7 +59,7 @@ def generate_csv_output(all_results_with_variants):
                 "Query ID": query_result['query_id'],
                 "Query Text": query_result['query_text'],
                 "Client Name": query_result['client_info'].get('name', 'N/A'),
-                "Client Guidelines": query_result['client_info'].get('guidelines', 'N/A'), # Keep full guidelines in CSV
+                "Client Guidelines": query_result['client_info'].get('guidelines', 'N/A'),
                 "Variant Number": i + 1,
                 "Angle": variant['angle'],
                 "Final Answer": variant['final_answer'],
@@ -155,12 +155,12 @@ async def run_processing(queries, client_info_map, parameters, status_placeholde
         status_text.text(f"Processed {processed_count} of {len(queries)} queries. Generating {NUM_VARIANTS_PER_QUERY} variants each.")
 
     progress_bar.progress(100)
-    status_text.text(f"Processing complete for {len(all_query_results)} queries, each with {NUM_VARIANTS_PER_QUERY} variants.")
+    status_text.text(f"Processing complete for {len(all_query_results)} queries, each with {NUM_VARIANTS_PER_VARIANTS} variants.")
     st.success("HARO automation finished!")
     await ai_service.close()
     return all_query_results
 
-# --- Main Streamlit Application ---
+# --- Main Streamlit Application (Logout Button in Sidebar) ---
 
 def main():
     st.set_page_config(page_title="HARO Automation Tool", layout="wide")
@@ -217,6 +217,22 @@ def main():
         # IMPORTANT: Stop execution here if not authenticated, so the rest of the app doesn't render
         return 
 
+    # --- LOGOUT BUTTON IN SIDEBAR (Only displayed if authenticated) ---
+    # This is placed within st.sidebar, as requested.
+    with st.sidebar: # This places all content inside the sidebar
+        st.header("Generation Parameters") # This header is part of the sidebar content
+        st.session_state.general_instructions = st.text_area( # This text area is also in sidebar
+            "General Guidelines for Tone/Style (Applied to ALL queries/variants):",
+            value=st.session_state.general_instructions,
+            height=150,
+            help="These instructions will be passed to Claude and OpenAI for overall guidance on the output tone and style, *in addition* to client-specific guidelines."
+        )
+        # The logout button is directly below the general instructions in the sidebar
+        if st.button("Logout", key="sidebar_logout_button"): # Add a unique key for safety
+            st.session_state.authenticated = False
+            st.info("Logged out successfully.")
+            st.rerun()
+
     # --- REST OF THE MAIN APP CONTENT (Only displayed if authenticated, and rendered below the main header) ---
     st.markdown("Enter up to 4 HARO queries and their respective client information. The tool will generate **5 distinct variants** for each query.")
 
@@ -245,13 +261,9 @@ def main():
             client_val = st.text_area(
                 f"Client Name & Specific Guidelines for Query {i}:",
                 key=client_key,
-                height=250, # <-- Increased height for more visibility
-                placeholder=( # <-- Updated placeholder for better guidance
-                    f"E.g.,\nDigital Web Solutions\nInstructions:\nEach answer must be a maximum of 2 paragraphs or 200 words.\n"
-                    f"Use a unique perspective that hasn’t been shared before.\n"
-                    f"Paste plain text only. Markdown (like **bold**) will not be rendered but its content will be read by the AI."
-                ),
-                max_chars=3000 # <-- Increased max_chars to accommodate longer inputs
+                height=150,
+                placeholder=f"E.g.,\nDigital Web Solutions\nInstructions:\nEach answer must be a maximum of 2 paragraphs or 200 words.\nUse a unique perspective that hasn’t been shared before.\nKeep it expert-level yet simple enough for a general audience.\nOnly include one jargon term—avoid overcomplicating the response.\n...",
+                max_chars=1500
             )
             all_client_info_inputs_raw.append(client_val)
 
