@@ -177,6 +177,15 @@ def main():
     if 'general_instructions' not in st.session_state:
         st.session_state.general_instructions = "Ensure answers are concise, impactful, and demonstrate deep industry knowledge."
 
+    # Place this after st.set_page_config and before the main content
+    if st.session_state.authenticated:
+        _, logout_col = st.columns([0.85, 0.15])
+        with logout_col:
+            if st.button("Logout"):
+                st.session_state.authenticated = False
+                st.info("Logged out successfully.")
+                st.rerun()    
+
     DWS_LOGO_URL = "https://media.glassdoor.com/sqll/868966/digital-web-solutions-squarelogo-1579870425403.png"
 
     # Display the logo and title using columns for alignment
