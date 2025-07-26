@@ -199,10 +199,9 @@ def main():
             st.error("Error loading application credentials. Please ensure 'APP_CREDENTIALS' in st.secrets is valid JSON.")
             app_credentials = {}
 
-        user_col, pass_col = st.columns([0.5, 0.5])
-        with user_col:
+        input_col, _ = st.columns([0.5, 0.5])
+        with input_col:
             username = st.text_input("Username:")
-        with pass_col:
             password = st.text_input("Password:", type="password")
 
         login_button_col, _ = st.columns([0.3, 0.7])
