@@ -160,7 +160,7 @@ async def run_processing(queries, client_info_map, parameters, status_placeholde
     await ai_service.close()
     return all_query_results
 
-# --- Main Streamlit Application (Fixing Duplicate Logout Button) ---
+# --- Main Streamlit Application (Logout Button in Sidebar) ---
 
 def main():
     st.set_page_config(page_title="HARO Automation Tool", layout="wide")
@@ -179,7 +179,7 @@ def main():
 
     DWS_LOGO_URL = "https://media.glassdoor.com/sqll/868966/digital-web-solutions-squarelogo-1579870425403.png"
 
-    # Display the logo and title using columns for alignment
+    # Display the logo and title (always visible)
     logo_col, title_col = st.columns([0.1, 0.9])
     with logo_col:
         st.image(DWS_LOGO_URL, width=100)
@@ -217,19 +217,23 @@ def main():
         # IMPORTANT: Stop execution here if not authenticated, so the rest of the app doesn't render
         return 
 
-    # --- LOGOUT BUTTON (Only show ONE instance of the Logout button) ---
-    # The current authenticated user will always see this button at the top right.
-    # The previous attempt to put it before the logo/title resulted in duplication.
-    # We'll place it here, after the login gate, but before the main content.
-    if st.session_state.authenticated: # Only render if authenticated
-        _, logout_col = st.columns([0.85, 0.15]) # Adjust column ratio for top-right placement
-        with logout_col:
-            if st.button("Logout", key="top_logout_button"): # Add a unique key for safety
-                st.session_state.authenticated = False
-                st.info("Logged out successfully.")
-                st.rerun()
+    # --- LOGOUT BUTTON IN SIDEBAR (Only displayed if authenticated) ---
+    # This is placed within st.sidebar, as requested.
+    with st.sidebar: # This places all content inside the sidebar
+        st.header("Generation Parameters") # This header is part of the sidebar content
+        st.session_state.general_instructions = st.text_area( # This text area is also in sidebar
+            "General Guidelines for Tone/Style (Applied to ALL queries/variants):",
+            value=st.session_state.general_instructions,
+            height=150,
+            help="These instructions will be passed to Claude and OpenAI for overall guidance on the output tone and style, *in addition* to client-specific guidelines."
+        )
+        # The logout button is directly below the general instructions in the sidebar
+        if st.button("Logout", key="sidebar_logout_button"): # Add a unique key for safety
+            st.session_state.authenticated = False
+            st.info("Logged out successfully.")
+            st.rerun()
 
-    # --- REST OF THE MAIN APP CONTENT (Only displayed if authenticated) ---
+    # --- REST OF THE MAIN APP CONTENT (Only displayed if authenticated, and rendered below the main header) ---
     st.markdown("Enter up to 4 HARO queries and their respective client information. The tool will generate **5 distinct variants** for each query.")
 
     all_queries_inputs = []
@@ -271,14 +275,8 @@ def main():
         help="If checked, the generated Research and Draft stages, along with negative constraints applied, will be shown in the results and downloads."
     )
 
-    st.sidebar.header("Generation Parameters")
-    st.session_state.general_instructions = st.sidebar.text_area(
-        "General Guidelines for Tone/Style (Applied to ALL queries/variants):",
-        value=st.session_state.general_instructions,
-        height=150,
-        help="These instructions will be passed to Claude and OpenAI for overall guidance on the output tone and style, *in addition* to client-specific guidelines."
-    )
-
+    # Note: Generation Parameters header and text area are now within the sidebar context above.
+    # We only need the 'parameters' dictionary definition here.
     parameters = {
         "general_instructions": st.session_state.general_instructions
     }
