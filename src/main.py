@@ -155,7 +155,7 @@ async def run_processing(queries, client_info_map, parameters, status_placeholde
         status_text.text(f"Processed {processed_count} of {len(queries)} queries. Generating {NUM_VARIANTS_PER_QUERY} variants each.")
 
     progress_bar.progress(100)
-    status_text.text(f"Processing complete for {len(all_query_results)} queries, each with {NUM_VARIANTS_PER_VARIANTS} variants.")
+    status_text.text(f"Processing complete for {len(all_query_results)} queries, each with {NUM_VARIANTS_PER_QUERY} variants.")
     st.success("HARO automation finished!")
     await ai_service.close()
     return all_query_results
